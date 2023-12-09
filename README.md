@@ -142,3 +142,6 @@ As evident, I've only included the `name` property in the return. To be candid, 
 After validating it in a controlled environment, testing the payload against the live application also yields positive results. Flag successfully captured!
 
 ## Post-Exploitation
+In an actual penetration testing scenario, the true post-exploitation objective often involves acquiring a reverse shell, enabling deeper infiltration into the host or, in more severe cases, the entire network. But that I failed to do.
+
+As a software developer, this serves as a crucial reminder not to accept user input blindly. It emphasizes the importance of diligently sanitizing and implementing various checks tailored to the specific context. While practices may vary across tech stacks, adhering to best practices when it comes to saving and retrieving data is in our best interest.
